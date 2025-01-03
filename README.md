@@ -39,6 +39,163 @@ The docker image get's built to target:
 
 ---
 
+## Running in Kubernetes
+
+It's assumed that anyone using k8s has an idea of what they're doing and has a particular (network) architecture in their design which will be specific to their own setup. 
+
+An example of such a setup is provided by [@Frick](https://github.com/Frick) which may serve as useful jumping off point
+
+```
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ezbeq
+  labels:
+    kubernetes.io/metadata.name: ezbeq
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ezbeq-config
+  namespace: ezbeq
+data:
+# see https://github.com/3ll3d00d/ezbeq/tree/main/examples for more
+  ezbeq.yml: |
+    accessLogging: false
+    debugLogging: false
+    devices:
+      dsp1:
+        channels:
+          - sub1
+          - sub2
+        ip: 192.168.1.123:80
+        type: htp1
+        autoclear: true
+    port: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: ezbeq
+  name: ezbeq
+  namespace: ezbeq
+spec:
+  progressDeadlineSeconds: 30
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ezbeq
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ezbeq
+    spec:
+      containers:
+        - name: ezbeq
+          image: ghcr.io/3ll3d00d/ezbeq-docker:main
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            # this path is baked into the ezbeq-docker container and is where
+            # the log is created and config file must be mounted
+            - mountPath: /config
+              name: ezbeq-scratch
+            - mountPath: /config/ezbeq.yml
+              name: ezbeq-config
+              subPath: ezbeq.yml
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/1/version
+              port: http
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/1/version
+              port: http
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 200m
+              memory: 256Mi
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /api/1/version
+              port: http
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+      volumes:
+        - name: ezbeq-scratch
+          emptyDir:
+            sizeLimit: 120Mi
+        - name: ezbeq-config
+          configMap:
+            name: ezbeq-config
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ezbeq
+  namespace: ezbeq
+spec:
+  selector:
+    app.kubernetes.io/name: ezbeq
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ezbeq
+  namespace: ezbeq
+  annotations:
+    cert-manager.io/cluster-issuer: lets-encrypt
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/websocket-services: "ezbeq"
+    external-dns.alpha.kubernetes.io/hostname: ezbeq.yourdomain.dev
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: ezbeq.yourdomain.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ezbeq
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - ezbeq.yourdomain.dev
+      secretName: ezbeq-tls
+```
+
 ## Developer Documentation
 
 ### Multi Platform Docker Image
