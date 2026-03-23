@@ -45,14 +45,16 @@ echo "Port   : $EZBEQ_PORT"
 BUILD="--build"
 case "${1:-}" in
     --rebuild) BUILD="--build --no-cache" ;;
-    --stop)    docker compose down; exit 0 ;;
+    --stop)    docker compose -f docker-compose.yaml -f docker-compose.dev.yaml down; exit 0 ;;
 esac
 
+COMPOSE="docker compose -f docker-compose.yaml -f docker-compose.dev.yaml"
+
 if [[ "${1:-}" == "--logs" || "${1:-}" == "--rebuild" ]]; then
-    docker compose up -d $BUILD
-    docker compose logs -f
+    $COMPOSE up -d $BUILD
+    $COMPOSE logs -f
 else
-    docker compose up -d $BUILD
+    $COMPOSE up -d $BUILD
     echo ""
     echo "Running at http://localhost:$EZBEQ_PORT"
     echo "Logs: bin/run-local --logs   |   Stop: bin/run-local --stop"

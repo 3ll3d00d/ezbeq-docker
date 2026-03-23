@@ -1,8 +1,8 @@
-# Local development override — picked up automatically by `docker compose`
-# alongside docker-compose.yaml.
+# Local development compose override.
+# Used by bin/run-local via: docker compose -f docker-compose.yaml -f docker-compose.dev.yaml
+# Not loaded automatically — regular users running `docker compose up` are unaffected.
 #
 # All values are read from environment variables set in .env (copy .env.example).
-# bin/run-local loads .env and delegates to plain `docker compose up`.
 
 services:
   ezbeq-docker:
