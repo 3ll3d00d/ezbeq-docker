@@ -50,13 +50,13 @@ The docker image get's built to target:
 
 ## Running with Docker Compose
 
-[docker-compose.yaml](./docker-compose.yaml) is a ready-to-use starting point. Update the volume path to point to your config directory and run:
+Copy `.env.example` to `.env`, set `EZBEQ_CONFIG_DIR` to the directory containing your `ezbeq.yml`, then:
 
 ```bash
 docker compose up -d
 ```
 
-To customise beyond what's in `docker-compose.yaml` (e.g. add `extra_hosts`, change the user, mount USB devices), create a `docker-compose.override.yaml` alongside it — Docker Compose picks it up automatically. See [docker-compose.override.yaml](./docker-compose.override.yaml) for an example.
+[docker-compose.yaml](./docker-compose.yaml) pulls the published image and configures volumes, ports, and a healthcheck from your `.env`. To customise further (e.g. add `extra_hosts` for a MiniDSP hostname, change the user, mount USB devices), add a `docker-compose.override.yaml` alongside it — Docker Compose picks it up automatically.
 
 See the [ezbeq documentation](https://github.com/3ll3d00d/ezbeq) for `ezbeq.yml` configuration options.
 
@@ -64,14 +64,13 @@ See the [ezbeq documentation](https://github.com/3ll3d00d/ezbeq) for `ezbeq.yml`
 
 ## Running a local branch
 
-To test a local ezbeq source tree (e.g. an unreleased branch) without
-publishing an image:
+To build and run from a local ezbeq source tree (e.g. an unreleased branch):
 
 **1. Copy `.env.example` to `.env` and fill in `EZBEQ_SRC`:**
 
 ```bash
 cp .env.example .env
-# edit .env — at minimum set EZBEQ_SRC to your local ezbeq checkout
+# edit .env — set EZBEQ_SRC to your local ezbeq checkout and EZBEQ_CONFIG_DIR to your config dir
 ```
 
 **2. Run it:**
@@ -83,13 +82,11 @@ bin/run-local --rebuild  # force a full image rebuild
 bin/run-local --stop     # stop and remove the container
 ```
 
-The script mounts your real `ezbeq.yml` config (defaults to `~/.ezbeq/ezbeq.yml`;
-override with `EZBEQ_CONFIG` in `.env`). Device connection details (TCP address
-etc.) come from the config file as usual — no extra network configuration needed.
-
-The image is built from the `dev` target in `Dockerfile`, which compiles
-the React UI and downloads the minidsp binary, so it behaves identically
-to the published image.
+`bin/run-local` loads `.env`, auto-detects the port from your `ezbeq.yml`, and runs:
+```
+docker compose -f docker-compose.yaml -f docker-compose.dev.yaml up --build
+```
+[docker-compose.dev.yaml](./docker-compose.dev.yaml) extends the base config with the `dev` build target, which compiles the React UI from source and installs Python deps via Poetry.
 
 ---
 
