@@ -12,6 +12,3 @@ services:
       - ${EZBEQ_CONFIG_DIR}:/config
     ports:
       - "${EZBEQ_PORT:-8080}:${EZBEQ_PORT:-8080}"
-    # Optional: map hostnames to IPs for your network setup
-    # extra_hosts:
-    #   - "minidsp:192.168.1.86"

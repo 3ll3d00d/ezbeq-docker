@@ -15,3 +15,6 @@ services:
     environment:
       # Echo every HTTP request to stdout so it appears in `docker compose logs`.
       - EZBEQ_ACCESS_LOG_STDOUT=1
+    # Optional: map hostnames to IPs for your network setup
+    # extra_hosts:
+    #   - "minidsp:192.168.1.86"
