@@ -9,6 +9,15 @@ Creates and publishes an image for [ezBEQ](https://github.com/3ll3d00d/ezbeq) to
 > - [Synology NAS discussion](https://github.com/jmery/ezbeq-docker/tree/ef3f954f37b1b420e31635a699bfbb864e861ad9?tab=readme-ov-file#general-linux-docker-instructions)
 >  - [Higher privileges discussion](https://github.com/jmery/ezbeq-docker/tree/ef3f954f37b1b420e31635a699bfbb864e861ad9?tab=readme-ov-file#note-on-execute-container-using-high-privilege)
 
+## Contents
+
+- [Setup](#setup)
+- [FAQ](#faq)
+- [Running with Docker Compose](#running-with-docker-compose)
+- [Running a local branch](#running-a-local-branch)
+- [Running in Kubernetes](#running-in-kubernetes)
+- [Developer Documentation](#developer-documentation)
+
 ## Setup
 
 - Expects a volume mapped to `/config `to allow user supplied `ezbeq.yml`
@@ -36,6 +45,26 @@ The docker image get's built to target:
 
 - `linux/amd64`
 - `linux/arm64`
+
+---
+
+## Running with Docker Compose
+
+See [docker-compose.yaml](./docker-compose.yaml) for a working example. At minimum you need a volume mapped to `/config` containing your `ezbeq.yml`:
+
+```yaml
+services:
+  ezbeq:
+    image: ghcr.io/3ll3d00d/ezbeq-docker:main
+    container_name: ezbeq
+    volumes:
+      - /path/to/your/config:/config
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+```
+
+See the [ezbeq documentation](https://github.com/3ll3d00d/ezbeq) for `ezbeq.yml` configuration options.
 
 ---
 
