@@ -13,7 +13,6 @@
 #   bin/run-local --rebuild     # same as --logs but discard all Docker layer cache first
 #   bin/run-local --dump-config # print the config file that will be mounted, then exit
 set -euo pipefail
-set -x
 cd "$(dirname "$0")/.."
 
 # ── Load .env if present ──────────────────────────────────────────────────────
