@@ -13,5 +13,3 @@ services:
       - ${EZBEQ_CONFIG_DIR}:/config:ro
     ports:
       - "${EZBEQ_PORT:-8080}:8080"
-    extra_hosts:
-      - "minidsp:${MINIDSP_IP:-host-gateway}"

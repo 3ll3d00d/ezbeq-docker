@@ -65,7 +65,8 @@ bin/run-local --stop     # stop and remove the container
 ```
 
 The script mounts your real `ezbeq.yml` config (defaults to `~/.ezbeq/ezbeq.yml`;
-override with `EZBEQ_CONFIG` in `.env`), so it runs against your actual device.
+override with `EZBEQ_CONFIG` in `.env`). Device connection details (TCP address
+etc.) come from the config file as usual — no extra network configuration needed.
 
 The image is built from `Dockerfile.dev` in the ezbeq source tree, which
 compiles the React UI and downloads the minidsp binary, so it behaves

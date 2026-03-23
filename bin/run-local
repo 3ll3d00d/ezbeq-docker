@@ -67,8 +67,7 @@ done
 
 COMPOSE="docker compose -f docker-compose.yaml -f docker-compose.local.yaml"
 
-export EZBEQ_SRC
-export EZBEQ_CONFIG_DIR="$CONFIG_DIR"
+export EZBEQ_SRC EZBEQ_CONFIG_DIR="$CONFIG_DIR"
 
 if [[ "$ACTION" == "down" ]]; then
     $COMPOSE down

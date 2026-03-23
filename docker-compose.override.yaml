@@ -1,0 +1,21 @@
+services:
+  ezbeq-jr:
+    image: ezbeq-jr
+    # Set the user to run as
+    # user: "1001:1001"  # Set the user by UID:GID
+
+    # Override build context
+    build:
+      context: .
+    
+    volumes:
+      - ./config:/config  # Mount local config directory to container
+
+    # Your port mapping setting
+    ports:
+      - "8080:8080"
+    
+    # Optional hostname configs, depending on your ezbeq settings
+    extra_hosts:
+      - "ezbeq.me:192.168.1.82"
+      - "minidsp:192.168.1.86"
