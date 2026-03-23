@@ -7,7 +7,7 @@ services:
   ezbeq-jr:
     build:
       context: ${EZBEQ_SRC}
-      dockerfile: Dockerfile.dev
+      dockerfile: ${EZBEQ_DOCKER_DIR}/Dockerfile.dev
     image: ezbeq-local
     container_name: ezbeq-local
     volumes:
