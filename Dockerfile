@@ -11,8 +11,8 @@
 
 # ── Base: runtime OS + minidsp binary ────────────────────────────────────────
 # Shared by both the production and dev build targets.
-# Using python:3.11-slim-bookworm to support minidsp which requires glibc >= 2.32
-FROM python:3.11-slim-bookworm AS base
+# python:3.13-slim-trixie — Debian 13 (stable), native Python 3.13, glibc 2.40
+FROM python:3.13-slim-trixie AS base
 
 # Set the environment variable for ezbeq configuration
 ENV EZBEQ_CONFIG_HOME=/config

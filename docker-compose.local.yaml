@@ -4,7 +4,7 @@
 # Use bin/run-local instead of invoking this directly.
 
 services:
-  ezbeq-jr:
+  ezbeq-docker:
     build:
       context: ${EZBEQ_SRC}
       dockerfile: ${EZBEQ_DOCKER_DIR}/Dockerfile

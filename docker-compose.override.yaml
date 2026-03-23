@@ -1,5 +1,5 @@
 services:
-  ezbeq-jr:
+  ezbeq-docker:
     image: ezbeq-docker
     # Set the user to run as
     # user: "1001:1001"  # Set the user by UID:GID
