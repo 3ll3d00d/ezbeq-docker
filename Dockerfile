@@ -7,7 +7,7 @@
 #   production  – default; clean runtime image with non-root user.
 #                 Built by CI / docker buildx bake.
 #   dev         – local development; Poetry + Node/Yarn, builds React UI.
-#                 Used by bin/run-local via docker-compose.local.yaml.
+#                 Used by bin/run-local via docker-compose.override.yaml.
 
 # ── Base: runtime OS + minidsp binary ────────────────────────────────────────
 # Shared by both the production and dev build targets.
@@ -49,14 +49,9 @@ WORKDIR /app
 # Define a volume for configuration data
 VOLUME ["/config"]
 
+# Document the default port. The actual port is set via 'port:' in ezbeq.yml
+# and must be reflected in the compose file's ports: and healthcheck: entries.
 EXPOSE 8080
-
-# Default health check uses port 8080 (the ezbeq default).
-# Override this in your docker-compose file if you use a different port:
-#   healthcheck:
-#     test: ["CMD-SHELL", "curl -f -s http://localhost:YOUR_PORT/api/1/version || exit 1"]
-HEALTHCHECK --interval=10s --timeout=2s \
-  CMD curl -f -s --show-error http://localhost:8080/api/1/version || exit 1
 
 # ── Production builder: install Python deps into a venv ──────────────────────
 # Separate stage so build tools don't end up in the final runtime image.

@@ -1,9 +1,8 @@
-# Personal override — gitignored, not committed.
-# Copy docker-compose.override.yaml.example to docker-compose.override.yaml
-# and fill in your values, or set variables in .env.
+# Local development override — picked up automatically by `docker compose`
+# alongside docker-compose.yaml.
 #
-# This file is picked up automatically by `docker compose` alongside
-# docker-compose.yaml. bin/run-local uses it via the same mechanism.
+# All values are read from environment variables set in .env (copy .env.example).
+# bin/run-local loads .env and delegates to plain `docker compose up`.
 
 services:
   ezbeq-docker:
