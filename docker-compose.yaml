@@ -16,7 +16,7 @@ services:
 
     # Your port mapping setting
     # ports:
-      # - "9968:9968"
+      # - "8080:8080"
     
     # Optional hostname configs, depending on your ezbeq settings
     # extra_hosts:

@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 #
-# Multi-stage build with three targets:
+# Multi-stage build with four targets:
 #
 #   base        – shared OS packages + minidsp binary (not used directly)
-#   production  – default; pip-installs from requirements.txt into a venv,
-#                 runs as a non-root user.  Built by CI / docker buildx bake.
-#   dev         – local development; builds from a Poetry source tree with the
-#                 React UI compiled via Node/Yarn.  Used by bin/run-local via
-#                 docker-compose.local.yaml.
+#   builder     – production Python venv built from requirements.txt
+#   production  – default; clean runtime image with non-root user.
+#                 Built by CI / docker buildx bake.
+#   dev         – local development; Poetry + Node/Yarn, builds React UI.
+#                 Used by bin/run-local via docker-compose.local.yaml.
 
 # ── Base: runtime OS + minidsp binary ────────────────────────────────────────
 # Shared by both the production and dev build targets.
@@ -37,11 +37,11 @@ RUN ARCH=$(dpkg --print-architecture) && \
       *) echo "Unsupported architecture: $ARCH"; exit 1 ;; \
     esac && \
     URL="https://github.com/mrene/minidsp-rs/releases/latest/download/minidsp.${ARCH}.tar.gz" && \
-    curl -L -o minidsp.tar.gz "$URL" && \
-    tar -xzf minidsp.tar.gz && \
+    curl -L -o minidsp.${ARCH}.tar.gz "$URL" && \
+    tar -xzf minidsp.${ARCH}.tar.gz && \
     mv minidsp /usr/local/bin/minidsp && \
     chmod +x /usr/local/bin/minidsp && \
-    rm minidsp.tar.gz
+    rm minidsp.${ARCH}.tar.gz
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -56,7 +56,7 @@ EXPOSE 8080
 #   healthcheck:
 #     test: ["CMD-SHELL", "curl -f -s http://localhost:YOUR_PORT/api/1/version || exit 1"]
 HEALTHCHECK --interval=10s --timeout=2s \
-  CMD curl -f -s http://localhost:8080/api/1/version || exit 1
+  CMD curl -f -s --show-error http://localhost:8080/api/1/version || exit 1
 
 # ── Production builder: install Python deps into a venv ──────────────────────
 # Separate stage so build tools don't end up in the final runtime image.
