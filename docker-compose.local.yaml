@@ -14,9 +14,9 @@ services:
     volumes:
       - ${EZBEQ_CONFIG_DIR}:/config
     ports:
-      - "${EZBEQ_PORT:-9968}:${EZBEQ_PORT:-9968}"
+      - "${EZBEQ_PORT:-8080}:${EZBEQ_PORT:-8080}"
     healthcheck:
-      test: ["CMD-SHELL", "curl -f -s http://localhost:${EZBEQ_PORT:-9968}/api/1/version || exit 1"]
+      test: ["CMD-SHELL", "curl -f -s http://localhost:${EZBEQ_PORT:-8080}/api/1/version || exit 1"]
       interval: 10s
       timeout: 2s
       retries: 3

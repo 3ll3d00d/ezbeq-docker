@@ -49,14 +49,14 @@ WORKDIR /app
 # Define a volume for configuration data
 VOLUME ["/config"]
 
-EXPOSE 9968
+EXPOSE 8080
 
-# Default health check uses port 9968 (the ezbeq default).
+# Default health check uses port 8080 (the ezbeq default).
 # Override this in your docker-compose file if you use a different port:
 #   healthcheck:
 #     test: ["CMD-SHELL", "curl -f -s http://localhost:YOUR_PORT/api/1/version || exit 1"]
 HEALTHCHECK --interval=10s --timeout=2s \
-  CMD curl -f -s http://localhost:9968/api/1/version || exit 1
+  CMD curl -f -s http://localhost:8080/api/1/version || exit 1
 
 # ── Production builder: install Python deps into a venv ──────────────────────
 # Separate stage so build tools don't end up in the final runtime image.
