@@ -1,20 +1,28 @@
 services:
   ezbeq-jr:
-    image: ezbeq-jr
+    image: ezbeq-docker
     # Set the user to run as
     # user: "1001:1001"  # Set the user by UID:GID
 
     # Override build context
     build:
       context: .
-    
+
     volumes:
       - ./config:/config  # Mount local config directory to container
 
-    # Your port mapping setting
+    # Port mapping: set EZBEQ_PORT to match the 'port' value in your ezbeq.yml.
+    # Both sides must match because the app listens on the port from its config file.
     ports:
-      - "8080:8080"
-    
+      - "${EZBEQ_PORT:-9968}:${EZBEQ_PORT:-9968}"
+
+    # Health check: override port if your ezbeq.yml uses a non-default port.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -s http://localhost:${EZBEQ_PORT:-9968}/api/1/version || exit 1"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+
     # Optional hostname configs, depending on your ezbeq settings
     extra_hosts:
       - "ezbeq.me:192.168.1.82"

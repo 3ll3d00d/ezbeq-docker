@@ -7,10 +7,20 @@ services:
   ezbeq-jr:
     build:
       context: ${EZBEQ_SRC}
-      dockerfile: ${EZBEQ_DOCKER_DIR}/Dockerfile.dev
+      dockerfile: ${EZBEQ_DOCKER_DIR}/Dockerfile
+      target: dev
     image: ezbeq-local
     container_name: ezbeq-local
     volumes:
       - ${EZBEQ_CONFIG_DIR}:/config
     ports:
-      - "${EZBEQ_PORT:-8080}:8080"
+      - "${EZBEQ_PORT:-9968}:${EZBEQ_PORT:-9968}"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -s http://localhost:${EZBEQ_PORT:-9968}/api/1/version || exit 1"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+    environment:
+      # Echo every HTTP request to stdout so it appears in `docker compose logs`.
+      # This is independent of accessLogging: in ezbeq.yml (which controls the file).
+      - EZBEQ_ACCESS_LOG_STDOUT=1

@@ -1,6 +1,6 @@
 services:
   ezbeq-jr:
-    image: 3ll3d00d/ezbeq-jr
+    image: 3ll3d00d/ezbeq-docker
     container_name: ezbeq
     environment:
       - EZBEQ_CONFIG_HOME=/config  # Set config home environment variable
@@ -16,7 +16,7 @@ services:
 
     # Your port mapping setting
     # ports:
-      # - "8080:8080"
+      # - "9968:9968"
     
     # Optional hostname configs, depending on your ezbeq settings
     # extra_hosts:
