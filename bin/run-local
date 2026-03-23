@@ -11,6 +11,7 @@
 #   bin/run-local --foreground  # run in foreground (ctrl-c to stop)
 #   bin/run-local --stop        # stop and remove the container
 #   bin/run-local --rebuild     # force a full image rebuild
+#   bin/run-local --dump-config # print the config file that will be mounted, then exit
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -58,12 +59,20 @@ ACTION="up"
 
 for arg in "$@"; do
     case "$arg" in
-        --rebuild)    BUILD_FLAG="--build --no-cache" ;;
-        --foreground) FOREGROUND=true ;;
-        --logs)       ACTION="logs" ;;
-        --stop)       ACTION="down" ;;
+        --rebuild)     BUILD_FLAG="--build --no-cache" ;;
+        --foreground)  FOREGROUND=true ;;
+        --logs)        ACTION="logs" ;;
+        --stop)        ACTION="down" ;;
+        --dump-config) ACTION="dump-config" ;;
     esac
 done
+
+if [[ "$ACTION" == "dump-config" ]]; then
+    echo "=== Config file: $EZBEQ_CONFIG ==="
+    echo
+    cat "$EZBEQ_CONFIG"
+    exit 0
+fi
 
 COMPOSE="docker compose -f docker-compose.yaml -f docker-compose.local.yaml"
 
