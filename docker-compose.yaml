@@ -9,6 +9,6 @@ services:
       timeout: 2s
       retries: 3
     volumes:
-      - ${EZBEQ_CONFIG_DIR}:/config
+      - ${EZBEQ_CONFIG_HOME:-~/.ezbeq}:/config
     ports:
       - "${EZBEQ_PORT:-8080}:${EZBEQ_PORT:-8080}"

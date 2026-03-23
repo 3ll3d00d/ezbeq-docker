@@ -50,13 +50,17 @@ The docker image get's built to target:
 
 ## Running with Docker Compose
 
-Copy `.env.example` to `.env`, set `EZBEQ_CONFIG_DIR` to the directory containing your `ezbeq.yml`, then:
+`docker compose up -d` works with no configuration — it pulls the published image and mounts `~/.ezbeq` as the config directory by default.
+
+To use a different config directory, set `EZBEQ_CONFIG_HOME` in a `.env` file (copy `.env.example`):
 
 ```bash
+cp .env.example .env
+# set EZBEQ_CONFIG_HOME=/path/to/your/config
 docker compose up -d
 ```
 
-[docker-compose.yaml](./docker-compose.yaml) pulls the published image and configures volumes, ports, and a healthcheck from your `.env`. To customise further (e.g. add `extra_hosts` for a MiniDSP hostname, change the user, mount USB devices), add a `docker-compose.override.yaml` alongside it — Docker Compose picks it up automatically.
+[docker-compose.yaml](./docker-compose.yaml) also reads `EZBEQ_PORT` from `.env` if your `ezbeq.yml` uses a non-default port. To customise further (e.g. add `extra_hosts` for a MiniDSP hostname, change the user, mount USB devices), add a `docker-compose.override.yaml` alongside it — Docker Compose picks it up automatically.
 
 See the [ezbeq documentation](https://github.com/3ll3d00d/ezbeq) for `ezbeq.yml` configuration options.
 
@@ -70,7 +74,7 @@ To build and run from a local ezbeq source tree (e.g. an unreleased branch):
 
 ```bash
 cp .env.example .env
-# edit .env — set EZBEQ_SRC to your local ezbeq checkout and EZBEQ_CONFIG_DIR to your config dir
+# edit .env — set EZBEQ_SRC to your local ezbeq checkout and EZBEQ_CONFIG_HOME to your config dir
 ```
 
 **2. Run it:**

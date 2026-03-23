@@ -35,7 +35,7 @@ if [[ -z "${EZBEQ_PORT:-}" ]]; then
     EZBEQ_PORT="${EZBEQ_PORT:-8080}"
 fi
 
-export EZBEQ_SRC EZBEQ_CONFIG_DIR="$(dirname "$EZBEQ_CONFIG")" EZBEQ_DOCKER_DIR="$(pwd)" EZBEQ_PORT
+export EZBEQ_SRC EZBEQ_CONFIG_HOME="$(dirname "$EZBEQ_CONFIG")" EZBEQ_DOCKER_DIR="$(pwd)" EZBEQ_PORT
 
 echo "Source : $EZBEQ_SRC"
 echo "Config : $EZBEQ_CONFIG"
