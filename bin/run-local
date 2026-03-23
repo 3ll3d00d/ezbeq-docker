@@ -6,11 +6,11 @@
 # before running this script.
 #
 # Usage:
-#   bin/run-local               # build + start (detached)
-#   bin/run-local --logs        # follow logs after starting
-#   bin/run-local --foreground  # run in foreground (ctrl-c to stop)
+#   bin/run-local               # build from source + start (detached)
+#   bin/run-local --logs        # build from source + start + follow logs
+#   bin/run-local --foreground  # build from source + run in foreground (ctrl-c to stop)
 #   bin/run-local --stop        # stop and remove the container
-#   bin/run-local --rebuild     # force a full image rebuild
+#   bin/run-local --rebuild     # same as --logs but discard all Docker layer cache first
 #   bin/run-local --dump-config # print the config file that will be mounted, then exit
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -53,7 +53,9 @@ echo "Config file   : $EZBEQ_CONFIG"
 echo ""
 
 # ── Parse args ────────────────────────────────────────────────────────────────
-BUILD_FLAG=""
+# Always rebuild from source — Docker can't detect when Python/JS files change.
+# Use --rebuild to also discard the layer cache (slower but fully clean).
+BUILD_FLAG="--build"
 FOREGROUND=false
 ACTION="up"
 
