@@ -104,25 +104,37 @@ USER ezbeq
 # Define the default command to run the ezbeq application
 CMD ["ezbeq"]
 
-# ── Dev: local source build with Poetry + Node/Yarn ──────────────────────────
+# ── UI builder: compile React app ────────────────────────────────────────────
+# Isolated Node stage so that node_modules never enters the dev image layer.
+# Only the Vite dist output (~a few MB) is copied across; the 200MB+
+# node_modules is discarded after this stage completes.
+FROM node:22-slim AS ui-builder
+
+WORKDIR /app/ui
+
+# Copy ui source — .yarnrc.yml references .yarn/releases/yarn-4.12.0.cjs so
+# the whole ui/ tree is needed.  node_modules and .yarn/cache are excluded
+# via .dockerignore so the build context stays small.
+COPY ui/ .
+
+# Mount the yarn cache at the location Yarn 4 uses when enableGlobalCache is
+# false (i.e. the project-local .yarn/cache dir).  This persists the package
+# zip archives across builds so yarn install is fast on cache hits.
+RUN --mount=type=cache,target=/app/ui/.yarn/cache \
+    yarn install --silent && yarn build
+
+# ── Dev: local source build with Poetry ──────────────────────────────────────
 # Build context is the local ezbeq source tree (set by docker-compose.local.yaml).
-# BuildKit cache mounts keep Yarn and Poetry package caches on the host so
-# only changed layers are rebuilt when source files change.
+# Node/Yarn are NOT needed here — the compiled UI is copied from ui-builder.
 FROM base AS dev
 
-# Add Node.js, Yarn (via corepack) and build tools needed for UI compilation and Poetry
+# Install build tools needed for Poetry / native Python extensions
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    # Tools for compiling and building packages
     build-essential \
-    # Python virtual environment creation tool
     python3-venv && \
-    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
-    apt-get install --no-install-recommends -y nodejs && \
-    corepack enable yarn && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
-# Cache pip across builds so Poetry itself isn't re-downloaded every time
+# Install Poetry; cache pip downloads across builds
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install poetry
 
@@ -134,18 +146,14 @@ RUN poetry config virtualenvs.in-project true
 
 # Install Python deps (without the app itself yet — better layer caching,
 # this step only reruns when pyproject.toml or poetry.lock changes).
-# Only the download cache is mounted (not the virtualenvs dir).
 COPY pyproject.toml poetry.lock ./
 RUN --mount=type=cache,target=/root/.cache/pypoetry/cache \
     poetry install --no-root
 
-# Build the React UI into ezbeq/ui/
-# Cache the Yarn package cache across builds — node_modules is still rebuilt
-# inside the image layer, but packages are fetched from the host cache.
-# This step only reruns when ui/ files change.
-COPY ui/ ./ui/
-RUN --mount=type=cache,target=/root/.yarn/berry/cache \
-    cd ui && yarn install --silent && yarn build
+# Copy the compiled UI from the ui-builder stage (a few MB, not node_modules).
+# vite.config.js sets outDir: '../ezbeq/ui' relative to ui/, so output lands
+# at /app/ezbeq/ui inside the ui-builder container.
+COPY --from=ui-builder /app/ezbeq/ui ./ezbeq/ui/
 
 # Copy the full source and install the app entry point
 COPY . .
