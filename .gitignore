@@ -2,6 +2,9 @@
 # config testing
 config/
 
+# Personal dev override — copy docker-compose.override.yaml.example and fill in .env
+docker-compose.override.yaml
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
