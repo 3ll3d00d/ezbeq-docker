@@ -1,6 +1,6 @@
 services:
   ezbeq-docker:
-    image: ghcr.io/3ll3d00d/ezbeq-docker
+    image: ghcr.io/3ll3d00d/ezbeq-docker:main
     container_name: ezbeq
     restart: unless-stopped
     healthcheck:
