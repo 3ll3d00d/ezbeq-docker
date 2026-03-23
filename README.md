@@ -1,4 +1,4 @@
-# ezbeq-jr
+# ezbeq-docker
 
 Creates and publishes an image for [ezBEQ](https://github.com/3ll3d00d/ezbeq) to github packages, for use with [JRiver Media Center](https://www.jriver.com), or any ezBEQ client that uses the [MiniDSP-RS](https://github.com/mrene/minidsp-rs) project.
 
@@ -68,9 +68,9 @@ The script mounts your real `ezbeq.yml` config (defaults to `~/.ezbeq/ezbeq.yml`
 override with `EZBEQ_CONFIG` in `.env`). Device connection details (TCP address
 etc.) come from the config file as usual — no extra network configuration needed.
 
-The image is built from `Dockerfile.dev` in the ezbeq source tree, which
-compiles the React UI and downloads the minidsp binary, so it behaves
-identically to the published image.
+The image is built from the `dev` target in `Dockerfile`, which compiles
+the React UI and downloads the minidsp binary, so it behaves identically
+to the published image.
 
 ---
 
@@ -83,7 +83,7 @@ Build for two architectures in parallel, push:
 ```bash
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t <HUB USERNAME>/ezbeq-jr:latest \
+  -t <HUB USERNAME>/ezbeq-docker:latest \
   --push .
 ```
 
