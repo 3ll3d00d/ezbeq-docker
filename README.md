@@ -43,6 +43,36 @@ The docker image get's built to target:
 
 ---
 
+## Running a local branch
+
+To test a local ezbeq source tree (e.g. an unreleased branch) without
+publishing an image:
+
+**1. Copy `.env.example` to `.env` and fill in `EZBEQ_SRC`:**
+
+```bash
+cp .env.example .env
+# edit .env — at minimum set EZBEQ_SRC to your local ezbeq checkout
+```
+
+**2. Run it:**
+
+```bash
+bin/run-local            # build image and start (detached)
+bin/run-local --logs     # start and follow logs
+bin/run-local --rebuild  # force a full image rebuild
+bin/run-local --stop     # stop and remove the container
+```
+
+The script mounts your real `ezbeq.yml` config (defaults to `~/.ezbeq/ezbeq.yml`;
+override with `EZBEQ_CONFIG` in `.env`), so it runs against your actual device.
+
+The image is built from `Dockerfile.dev` in the ezbeq source tree, which
+compiles the React UI and downloads the minidsp binary, so it behaves
+identically to the published image.
+
+---
+
 ## Developer Documentation
 
 ### Multi Platform Docker Image

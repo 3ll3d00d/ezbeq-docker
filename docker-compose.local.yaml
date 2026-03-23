@@ -1,0 +1,17 @@
+# Local development override — builds the image from a local ezbeq source tree
+# instead of pulling the published PyPI package.
+#
+# Use bin/run-local instead of invoking this directly.
+
+services:
+  ezbeq-jr:
+    build:
+      context: ${EZBEQ_SRC}
+      dockerfile: Dockerfile.dev
+    image: ezbeq-local
+    volumes:
+      - ${EZBEQ_CONFIG_DIR}:/config:ro
+    ports:
+      - "${EZBEQ_PORT:-8080}:8080"
+    extra_hosts:
+      - "minidsp:${MINIDSP_IP:-host-gateway}"

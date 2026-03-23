@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# Build and run ezbeq from a local source tree instead of the published image.
+#
+# Configuration is read from a .env file in this directory (git-ignored).
+# Copy .env.example to .env and fill in the values, or export the variables
+# before running this script.
+#
+# Usage:
+#   bin/run-local               # build + start (detached)
+#   bin/run-local --logs        # follow logs after starting
+#   bin/run-local --foreground  # run in foreground (ctrl-c to stop)
+#   bin/run-local --stop        # stop and remove the container
+#   bin/run-local --rebuild     # force a full image rebuild
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+# ── Load .env if present ──────────────────────────────────────────────────────
+if [[ -f .env ]]; then
+    set -o allexport
+    source .env
+    set +o allexport
+fi
+
+# ── Required: path to your local ezbeq branch ────────────────────────────────
+if [[ -z "${EZBEQ_SRC:-}" ]]; then
+    echo "Error: EZBEQ_SRC is not set."
+    echo ""
+    echo "Set it in .env or export it before running:"
+    echo "  EZBEQ_SRC=/path/to/ezbeq-branch bin/run-local"
+    echo ""
+    echo "See .env.example for all options."
+    exit 1
+fi
+
+if [[ ! -f "$EZBEQ_SRC/Dockerfile.dev" ]]; then
+    echo "Error: EZBEQ_SRC=$EZBEQ_SRC does not look like an ezbeq source tree"
+    echo "       (expected Dockerfile.dev to be present)"
+    exit 1
+fi
+
+# ── Required: config file ─────────────────────────────────────────────────────
+EZBEQ_CONFIG="${EZBEQ_CONFIG:-$HOME/.ezbeq/ezbeq.yml}"
+if [[ ! -f "$EZBEQ_CONFIG" ]]; then
+    echo "Error: config file not found: $EZBEQ_CONFIG"
+    echo "Set EZBEQ_CONFIG in .env to point to your ezbeq.yml"
+    exit 1
+fi
+CONFIG_DIR="$(dirname "$EZBEQ_CONFIG")"
+
+echo "Building from : $EZBEQ_SRC"
+echo "Config file   : $EZBEQ_CONFIG"
+echo ""
+
+# ── Parse args ────────────────────────────────────────────────────────────────
+BUILD_FLAG=""
+FOREGROUND=false
+ACTION="up"
+
+for arg in "$@"; do
+    case "$arg" in
+        --rebuild)    BUILD_FLAG="--build --no-cache" ;;
+        --foreground) FOREGROUND=true ;;
+        --logs)       ACTION="logs" ;;
+        --stop)       ACTION="down" ;;
+    esac
+done
+
+COMPOSE="docker compose -f docker-compose.yaml -f docker-compose.local.yaml"
+
+export EZBEQ_SRC
+export EZBEQ_CONFIG_DIR="$CONFIG_DIR"
+
+if [[ "$ACTION" == "down" ]]; then
+    $COMPOSE down
+elif [[ "$ACTION" == "logs" ]]; then
+    $COMPOSE up -d $BUILD_FLAG
+    $COMPOSE logs -f
+elif $FOREGROUND; then
+    $COMPOSE up $BUILD_FLAG
+else
+    $COMPOSE up -d $BUILD_FLAG
+    echo ""
+    echo "Running at http://localhost:${EZBEQ_PORT:-8080}"
+    echo "Logs: bin/run-local --logs   |   Stop: bin/run-local --stop"
+fi
