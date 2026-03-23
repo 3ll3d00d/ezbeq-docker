@@ -1,7 +1,9 @@
-# Local development override — builds the image from a local ezbeq source tree
-# instead of pulling the published PyPI package.
+# Personal override — gitignored, not committed.
+# Copy docker-compose.override.yaml.example to docker-compose.override.yaml
+# and fill in your values, or set variables in .env.
 #
-# Use bin/run-local instead of invoking this directly.
+# This file is picked up automatically by `docker compose` alongside
+# docker-compose.yaml. bin/run-local uses it via the same mechanism.
 
 services:
   ezbeq-docker:
@@ -22,5 +24,7 @@ services:
       retries: 3
     environment:
       # Echo every HTTP request to stdout so it appears in `docker compose logs`.
-      # This is independent of accessLogging: in ezbeq.yml (which controls the file).
       - EZBEQ_ACCESS_LOG_STDOUT=1
+    # Optional: map hostnames to IPs for your network setup
+    # extra_hosts:
+    #   - "minidsp:192.168.1.86"

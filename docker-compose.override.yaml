@@ -1,29 +1,30 @@
+# Personal override — gitignored, not committed.
+# Copy docker-compose.override.yaml.example to docker-compose.override.yaml
+# and fill in your values, or set variables in .env.
+#
+# This file is picked up automatically by `docker compose` alongside
+# docker-compose.yaml. bin/run-local uses it via the same mechanism.
+
 services:
   ezbeq-docker:
-    image: ezbeq-docker
-    # Set the user to run as
-    # user: "1001:1001"  # Set the user by UID:GID
-
-    # Override build context
     build:
-      context: .
-
+      context: ${EZBEQ_SRC}
+      dockerfile: ${EZBEQ_DOCKER_DIR}/Dockerfile
+      target: dev
+    image: ezbeq-local
+    container_name: ezbeq-local
     volumes:
-      - ./config:/config  # Mount local config directory to container
-
-    # Port mapping: set EZBEQ_PORT to match the 'port' value in your ezbeq.yml.
-    # Both sides must match because the app listens on the port from its config file.
+      - ${EZBEQ_CONFIG_DIR}:/config
     ports:
       - "${EZBEQ_PORT:-8080}:${EZBEQ_PORT:-8080}"
-
-    # Health check: override port if your ezbeq.yml uses a non-default port.
     healthcheck:
       test: ["CMD-SHELL", "curl -f -s http://localhost:${EZBEQ_PORT:-8080}/api/1/version || exit 1"]
       interval: 10s
       timeout: 2s
       retries: 3
-
-    # Optional hostname configs, depending on your ezbeq settings
-    extra_hosts:
-      - "ezbeq.me:192.168.1.82"
-      - "minidsp:192.168.1.86"
+    environment:
+      # Echo every HTTP request to stdout so it appears in `docker compose logs`.
+      - EZBEQ_ACCESS_LOG_STDOUT=1
+    # Optional: map hostnames to IPs for your network setup
+    # extra_hosts:
+    #   - "minidsp:192.168.1.86"

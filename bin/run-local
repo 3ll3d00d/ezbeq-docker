@@ -1,105 +1,59 @@
 #!/usr/bin/env bash
-# Build and run ezbeq from a local source tree instead of the published image.
-#
-# Configuration is read from a .env file in this directory (git-ignored).
-# Copy .env.example to .env and fill in the values, or export the variables
-# before running this script.
+# Build and run ezbeq from a local source tree.
+# Reads configuration from .env (copy .env.example and fill in values).
 #
 # Usage:
-#   bin/run-local               # build from source + start (detached)
-#   bin/run-local --logs        # build from source + start + follow logs
-#   bin/run-local --foreground  # build from source + run in foreground (ctrl-c to stop)
+#   bin/run-local               # build + start detached
+#   bin/run-local --logs        # build + start + follow logs
+#   bin/run-local --rebuild     # force clean rebuild + follow logs
 #   bin/run-local --stop        # stop and remove the container
-#   bin/run-local --rebuild     # same as --logs but discard all Docker layer cache first
-#   bin/run-local --dump-config # print the config file that will be mounted, then exit
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# ── Load .env if present ──────────────────────────────────────────────────────
+# ── Load .env ─────────────────────────────────────────────────────────────────
 if [[ -f .env ]]; then
-    set -o allexport
-    source .env
-    set +o allexport
+    set -o allexport; source .env; set +o allexport
 fi
 
-# ── Required: path to your local ezbeq branch ────────────────────────────────
+# ── Validate ──────────────────────────────────────────────────────────────────
 if [[ -z "${EZBEQ_SRC:-}" ]]; then
-    echo "Error: EZBEQ_SRC is not set."
-    echo ""
-    echo "Set it in .env or export it before running:"
-    echo "  EZBEQ_SRC=/path/to/ezbeq-branch bin/run-local"
-    echo ""
-    echo "See .env.example for all options."
-    exit 1
+    echo "Error: EZBEQ_SRC is not set. See .env.example."; exit 1
 fi
-
 if [[ ! -f "$EZBEQ_SRC/pyproject.toml" ]]; then
-    echo "Error: EZBEQ_SRC=$EZBEQ_SRC does not look like an ezbeq source tree"
-    echo "       (expected pyproject.toml to be present)"
-    exit 1
+    echo "Error: EZBEQ_SRC=$EZBEQ_SRC does not look like an ezbeq source tree"; exit 1
 fi
 
-# ── Required: config file ─────────────────────────────────────────────────────
 EZBEQ_CONFIG="${EZBEQ_CONFIG:-$HOME/.ezbeq/ezbeq.yml}"
 if [[ ! -f "$EZBEQ_CONFIG" ]]; then
-    echo "Error: config file not found: $EZBEQ_CONFIG"
-    echo "Set EZBEQ_CONFIG in .env to point to your ezbeq.yml"
-    exit 1
+    echo "Error: config not found: $EZBEQ_CONFIG"; exit 1
 fi
-CONFIG_DIR="$(dirname "$EZBEQ_CONFIG")"
 
-# Auto-detect the app port from the config file so the port mapping always
-# matches the 'port:' value in ezbeq.yml.  EZBEQ_PORT in .env takes precedence
-# if you need to override, but normally you should never have to set it.
+# ── Auto-detect port from ezbeq.yml (EZBEQ_PORT in .env overrides) ────────────
 if [[ -z "${EZBEQ_PORT:-}" ]]; then
-    _port=$(grep -E '^\s*port\s*:' "$EZBEQ_CONFIG" 2>/dev/null | head -1 \
-            | sed 's/[^:]*:[[:space:]]*//' | tr -d ' \r\n')
-    EZBEQ_PORT="${_port:-9968}"
+    EZBEQ_PORT=$(grep -E '^\s*port\s*:' "$EZBEQ_CONFIG" 2>/dev/null | head -1 \
+        | sed 's/[^:]*:[[:space:]]*//' | tr -d ' \r\n')
+    EZBEQ_PORT="${EZBEQ_PORT:-8080}"
 fi
 
-echo "Building from : $EZBEQ_SRC"
-echo "Config file   : $EZBEQ_CONFIG"
-echo "Port          : $EZBEQ_PORT"
-echo ""
+export EZBEQ_SRC EZBEQ_CONFIG_DIR="$(dirname "$EZBEQ_CONFIG")" EZBEQ_DOCKER_DIR="$(pwd)" EZBEQ_PORT
 
-# ── Parse args ────────────────────────────────────────────────────────────────
-# Always rebuild from source — Docker can't detect when Python/JS files change.
-# Use --rebuild to also discard the layer cache (slower but fully clean).
-BUILD_FLAG="--build"
-FOREGROUND=false
-ACTION="up"
+echo "Source : $EZBEQ_SRC"
+echo "Config : $EZBEQ_CONFIG"
+echo "Port   : $EZBEQ_PORT"
 
-for arg in "$@"; do
-    case "$arg" in
-        --rebuild)     BUILD_FLAG="--build --no-cache" ;;
-        --foreground)  FOREGROUND=true ;;
-        --logs)        ACTION="logs" ;;
-        --stop)        ACTION="down" ;;
-        --dump-config) ACTION="dump-config" ;;
-    esac
-done
+# ── Run ───────────────────────────────────────────────────────────────────────
+BUILD="--build"
+case "${1:-}" in
+    --rebuild) BUILD="--build --no-cache" ;;
+    --stop)    docker compose down; exit 0 ;;
+esac
 
-if [[ "$ACTION" == "dump-config" ]]; then
-    echo "=== Config file: $EZBEQ_CONFIG ==="
-    echo
-    cat "$EZBEQ_CONFIG"
-    exit 0
-fi
-
-COMPOSE="docker compose -f docker-compose.yaml -f docker-compose.local.yaml"
-
-export EZBEQ_SRC EZBEQ_CONFIG_DIR="$CONFIG_DIR" EZBEQ_DOCKER_DIR="$(pwd)" EZBEQ_PORT
-
-if [[ "$ACTION" == "down" ]]; then
-    $COMPOSE down
-elif [[ "$ACTION" == "logs" ]]; then
-    $COMPOSE up -d $BUILD_FLAG
-    $COMPOSE logs -f
-elif $FOREGROUND; then
-    $COMPOSE up $BUILD_FLAG
+if [[ "${1:-}" == "--logs" || "${1:-}" == "--rebuild" ]]; then
+    docker compose up -d $BUILD
+    docker compose logs -f
 else
-    $COMPOSE up -d $BUILD_FLAG
+    docker compose up -d $BUILD
     echo ""
-    echo "Running at http://localhost:${EZBEQ_PORT:-9968}"
+    echo "Running at http://localhost:$EZBEQ_PORT"
     echo "Logs: bin/run-local --logs   |   Stop: bin/run-local --stop"
 fi
