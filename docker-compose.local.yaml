@@ -9,7 +9,8 @@ services:
       context: ${EZBEQ_SRC}
       dockerfile: Dockerfile.dev
     image: ezbeq-local
+    container_name: ezbeq-local
     volumes:
-      - ${EZBEQ_CONFIG_DIR}:/config:ro
+      - ${EZBEQ_CONFIG_DIR}:/config
     ports:
       - "${EZBEQ_PORT:-8080}:8080"
