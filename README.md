@@ -50,19 +50,13 @@ The docker image get's built to target:
 
 ## Running with Docker Compose
 
-See [docker-compose.yaml](./docker-compose.yaml) for a working example. At minimum you need a volume mapped to `/config` containing your `ezbeq.yml`:
+[docker-compose.yaml](./docker-compose.yaml) is a ready-to-use starting point. Update the volume path to point to your config directory and run:
 
-```yaml
-services:
-  ezbeq:
-    image: ghcr.io/3ll3d00d/ezbeq-docker:main
-    container_name: ezbeq
-    volumes:
-      - /path/to/your/config:/config
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
+```bash
+docker compose up -d
 ```
+
+To customise beyond what's in `docker-compose.yaml` (e.g. add `extra_hosts`, change the user, mount USB devices), create a `docker-compose.override.yaml` alongside it — Docker Compose picks it up automatically. See [docker-compose.override.yaml](./docker-compose.override.yaml) for an example.
 
 See the [ezbeq documentation](https://github.com/3ll3d00d/ezbeq) for `ezbeq.yml` configuration options.
 
