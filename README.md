@@ -16,6 +16,7 @@ Creates and publishes an image for [ezBEQ](https://github.com/3ll3d00d/ezbeq) to
 - [Running with Docker Compose](#running-with-docker-compose)
 - [Running a local branch](#running-a-local-branch)
 - [Running in Kubernetes](#running-in-kubernetes)
+- [CI / Published Images](#ci--published-images)
 - [Developer Documentation](#developer-documentation)
 
 ## Setup
@@ -250,6 +251,25 @@ spec:
         - ezbeq.yourdomain.dev
       secretName: ezbeq-tls
 ```
+
+## CI / Published Images
+
+Two GitHub Actions workflows publish images to `ghcr.io/<owner>/ezbeq-docker`:
+
+| Workflow | File | Trigger | Image tag | What it builds |
+|---|---|---|---|---|
+| Production | `publish.yaml` | Push to `main` | `:<branch>` (e.g. `:main`) | ezbeq installed from PyPI via `requirements.txt` — the official release |
+| Dev (from source) | `publish-dev.yaml` | Push to any branch | `:dev` | ezbeq built from source via Poetry, UI compiled from source |
+
+The dev workflow checks out the matching branch of `<owner>/ezbeq` (same name as the branch that triggered the build). If no matching branch exists it falls back to `main`, so ezbeq-docker-only branches still produce a working image.
+
+To use a dev image on a server instead of the official one, update the image tag in your `docker-compose.yaml`:
+
+```yaml
+image: ghcr.io/<owner>/ezbeq-docker:dev
+```
+
+---
 
 ## Developer Documentation
 
