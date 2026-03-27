@@ -30,6 +30,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -87,3 +88,31 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Find associated PR
+        id: find-pr
+        run: |
+          PR=$(gh pr list --repo "${{ github.repository }}" --head "${{ github.ref_name }}" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          echo "number=$PR" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update PR with dev image details
+        if: steps.find-pr.outputs.number != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ steps.find-pr.outputs.number }}
+          header: dev-image
+          message: |
+            ### 🐳 Dev image ready
+
+            Built from `${{ github.ref_name }}` (ezbeq: `${{ steps.ezbeq-ref.outputs.ref || 'PyPI fallback' }}`)
+
+            ```
+            docker pull ghcr.io/${{ github.repository }}:dev
+            ```
+
+            Or in `docker-compose.yaml`:
+            ```yaml
+            image: ghcr.io/${{ github.repository }}:dev
+            ```
