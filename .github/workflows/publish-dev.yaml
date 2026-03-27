@@ -15,10 +15,13 @@
 name: Create and publish a dev Docker image (built from source)
 
 on:
-  push:
+  push:  # direct branch pushes
     paths-ignore:
       - 'README.md'
-  workflow_dispatch:
+  pull_request:  # PR opened/updated/reopened
+    paths-ignore:
+      - 'README.md'
+  workflow_dispatch:  # manual trigger
 
 env:
   REGISTRY: ghcr.io
