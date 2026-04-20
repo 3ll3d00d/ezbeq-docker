@@ -1,0 +1,90 @@
+# Builds a dev image from source (ezbeq + ezbeq-docker checked out together).
+#
+# Unlike publish.yaml (which installs ezbeq from PyPI into a production image),
+# this workflow builds the `dev` Dockerfile target: it checks out the matching
+# branch of <owner>/ezbeq as the build context, runs a full Poetry install, and
+# compiles the React UI from source.
+#
+# Branch matching: the ezbeq branch is resolved to the same name as the branch
+# that triggered this workflow. If no matching branch exists in <owner>/ezbeq
+# (e.g. an ezbeq-docker-only branch), it falls back to the production target,
+# which installs ezbeq from PyPI — identical to publish.yaml.
+#
+# Images are tagged:  ghcr.io/<owner>/ezbeq-docker:dev  (always overwritten)
+
+name: Create and publish a dev Docker image (built from source)
+
+on:
+  push:
+    branches: ['dev']  # only when commits land on the dev branch
+    paths-ignore:
+      - 'README.md'
+  workflow_dispatch:  # manual trigger
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve ezbeq branch (fallback to production/PyPI)
+        id: ezbeq-ref
+        run: |
+          if git ls-remote --exit-code --heads \
+              "https://github.com/${{ github.repository_owner }}/ezbeq.git" \
+              "${{ github.ref_name }}" > /dev/null 2>&1; then
+            echo "ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "target=dev" >> $GITHUB_OUTPUT
+            echo "context=./ezbeq-src" >> $GITHUB_OUTPUT
+          else
+            echo "ref=" >> $GITHUB_OUTPUT
+            echo "target=production" >> $GITHUB_OUTPUT
+            echo "context=." >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout ezbeq source (${{ steps.ezbeq-ref.outputs.ref }})
+        if: steps.ezbeq-ref.outputs.target == 'dev'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/ezbeq
+          ref: ${{ steps.ezbeq-ref.outputs.ref }}
+          path: ezbeq-src
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=dev
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ steps.ezbeq-ref.outputs.context }}
+          file: ./Dockerfile
+          target: ${{ steps.ezbeq-ref.outputs.target }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
