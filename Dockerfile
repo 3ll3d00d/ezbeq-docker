@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     curl \
     # Python virtual environment creation tool
     python3-venv && \
-    python -m pip install --upgrade pip  # Upgrade pip to the latest version
+    # Upgrade pip to the latest version
+    python -m pip install --upgrade pip
 
 # Create a Python virtual environment at /opt/venv
 RUN python -m venv /opt/venv
@@ -25,7 +26,7 @@ ENV PATH="/opt/venv/bin:${PATH}"
 COPY requirements.txt ./
 
 # Install the Python dependencies listed in requirements.txt
-RUN pip install --pre --no-cache-dir -r requirements.txt
+RUN pip install --all-releases=ezbeq --no-cache-dir -r requirements.txt
 
 # Runtime stage: A clean, lightweight image for running the application
 FROM python:3.13-slim-trixie
