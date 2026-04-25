@@ -76,7 +76,7 @@ ENV PATH="/opt/venv/bin:${PATH}"
 COPY requirements.txt ./
 
 # Install the Python dependencies listed in requirements.txt
-RUN pip install --pre --no-cache-dir -r requirements.txt
+RUN pip install --all-releases=ezbeq --no-cache-dir -r requirements.txt
 
 # ── Production: clean runtime image ──────────────────────────────────────────
 # A clean, lightweight image for running the application.
