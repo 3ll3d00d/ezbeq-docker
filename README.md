@@ -1,5 +1,13 @@
 # ezbeq-docker
 
+> [!IMPORTANT]
+> **This repo is archived and `ghcr.io/3ll3d00d/ezbeq-docker` no longer gets new releases.**
+> Use [`ghcr.io/3ll3d00d/ezbeq`](https://github.com/3ll3d00d/ezbeq/tree/main/docker) instead, built from the
+> [ezbeq](https://github.com/3ll3d00d/ezbeq) repo. It is a drop-in replacement: same `/config` volume, port 8080,
+> non-root `ezbeq` user and bundled `minidsp`, for `linux/amd64` and `linux/arm64`. Change the image name to
+> `ghcr.io/3ll3d00d/ezbeq:latest` and keep the rest of your setup. Existing `ezbeq-docker` image versions stay
+> available to pull.
+
 Creates and publishes an image for [ezBEQ](https://github.com/3ll3d00d/ezbeq) to github packages, for use with [JRiver Media Center](https://www.jriver.com), or any ezBEQ client that uses the [MiniDSP-RS](https://github.com/mrene/minidsp-rs) project.
 
 > [!NOTE]
